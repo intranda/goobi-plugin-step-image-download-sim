@@ -1,5 +1,6 @@
 package de.intranda.goobi.plugins;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -8,10 +9,11 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.config.RequestConfig.Builder;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.log4j.Logger;
 import org.goobi.beans.Step;
 import org.goobi.production.cli.helper.WikiFieldHelper;
@@ -22,6 +24,8 @@ import org.goobi.production.plugin.interfaces.IPlugin;
 import org.goobi.production.plugin.interfaces.IStepPlugin;
 import org.goobi.beans.Process;
 
+import de.sub.goobi.config.ConfigurationHelper;
+import de.sub.goobi.helper.HttpClientHelper;
 import de.sub.goobi.helper.exceptions.DAOException;
 import de.sub.goobi.helper.exceptions.SwapException;
 import de.sub.goobi.persistence.managers.ProcessManager;
@@ -135,15 +139,22 @@ public class SimImageDownloadPlugin implements IStepPlugin, IPlugin {
         imageFile.getParentFile().mkdirs();
         imageFile.createNewFile();
 
-        HttpClient client = new HttpClient();
-        GetMethod method = new GetMethod(url);
+        CloseableHttpClient httpclient = null;
+        HttpGet method = null;
         InputStream istr = null;
         OutputStream ostr = null;
         try {
-            int statusCode = client.executeMethod(method);
-            if (statusCode != HttpStatus.SC_OK) {
+            httpclient = HttpClientBuilder.create().build();
+            method = new HttpGet(url);
+          
+
+            byte[] response = httpclient.execute(method, HttpClientHelper.byteArrayResponseHandler);
+            if (response == null) {
+                logger.error("Response stream is null");
+                return;
             }
-            istr = method.getResponseBodyAsStream();
+            istr = new ByteArrayInputStream(response);
+            
             ostr = new FileOutputStream(imageFile);
 
             // Transfer bytes from in to out
@@ -152,10 +163,12 @@ public class SimImageDownloadPlugin implements IStepPlugin, IPlugin {
             while ((len = istr.read(buf)) > 0) {
                 ostr.write(buf, 0, len);
             }
-        } catch (HttpException e) {
-            logger.error("Unable to connect to image url " + url);
+       
         } finally {
             method.releaseConnection();
+            if (httpclient != null) {
+                httpclient.close();
+            }
             if (istr != null) {
                 istr.close();
             }
