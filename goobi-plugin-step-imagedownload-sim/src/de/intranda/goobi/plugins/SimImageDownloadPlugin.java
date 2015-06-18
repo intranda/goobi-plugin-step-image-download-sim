@@ -93,7 +93,6 @@ public class SimImageDownloadPlugin implements IStepPlugin, IPlugin {
         return PluginGuiType.NONE;
     }
 
-    
     public String getPagePath() {
         return null;
     }
@@ -124,7 +123,8 @@ public class SimImageDownloadPlugin implements IStepPlugin, IPlugin {
 
             return false;
         }
-        ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(process.getWikifield(), "info", "Download der Bilder abgeschlossen."), process.getId());
+        ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(process.getWikifield(), "info", "Download der Bilder abgeschlossen."), process
+                .getId());
         return true;
     }
 
@@ -139,39 +139,14 @@ public class SimImageDownloadPlugin implements IStepPlugin, IPlugin {
         imageFile.getParentFile().mkdirs();
         imageFile.createNewFile();
 
-        CloseableHttpClient httpclient = null;
-        HttpGet method = null;
-        InputStream istr = null;
         OutputStream ostr = null;
         try {
-            httpclient = HttpClientBuilder.create().build();
-            method = new HttpGet(url);
-          
-
-            byte[] response = httpclient.execute(method, HttpClientHelper.byteArrayResponseHandler);
-            if (response == null) {
-                logger.error("Response stream is null");
-                return;
-            }
-            istr = new ByteArrayInputStream(response);
-            
             ostr = new FileOutputStream(imageFile);
 
-            // Transfer bytes from in to out
-            byte[] buf = new byte[1024];
-            int len;
-            while ((len = istr.read(buf)) > 0) {
-                ostr.write(buf, 0, len);
-            }
-       
+            HttpClientHelper.getStreamFromUrl(url, ostr);
+
         } finally {
-            method.releaseConnection();
-            if (httpclient != null) {
-                httpclient.close();
-            }
-            if (istr != null) {
-                istr.close();
-            }
+
             if (ostr != null) {
                 ostr.close();
             }
