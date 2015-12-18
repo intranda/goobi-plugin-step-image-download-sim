@@ -143,7 +143,7 @@ public class SimImageDownloadPlugin implements IStepPlugin, IPlugin {
         try {
             ostr = new FileOutputStream(imageFile);
 
-            HttpClientHelper.getStreamFromUrl(url, ostr);
+            HttpClientHelper.getStreamFromUrl(ostr, url);
 
         } finally {
 
