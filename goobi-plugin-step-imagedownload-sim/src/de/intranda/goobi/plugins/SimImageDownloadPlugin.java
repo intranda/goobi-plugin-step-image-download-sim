@@ -1,41 +1,35 @@
 package de.intranda.goobi.plugins;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.config.RequestConfig.Builder;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.log4j.Logger;
+import org.goobi.beans.LogEntry;
+import org.goobi.beans.Process;
 import org.goobi.beans.Step;
-import org.goobi.production.cli.helper.WikiFieldHelper;
+import org.goobi.production.enums.LogType;
 import org.goobi.production.enums.PluginGuiType;
 import org.goobi.production.enums.PluginType;
 import org.goobi.production.enums.StepReturnValue;
 import org.goobi.production.plugin.interfaces.IPlugin;
 import org.goobi.production.plugin.interfaces.IStepPlugin;
-import org.goobi.beans.Process;
 
-import de.sub.goobi.config.ConfigurationHelper;
 import de.sub.goobi.helper.HttpClientHelper;
 import de.sub.goobi.helper.exceptions.DAOException;
 import de.sub.goobi.helper.exceptions.SwapException;
 import de.sub.goobi.persistence.managers.ProcessManager;
+import net.xeoh.plugins.base.annotations.PluginImplementation;
 import ugh.dl.DocStruct;
 import ugh.dl.Fileformat;
 import ugh.dl.Metadata;
 import ugh.exceptions.PreferencesException;
 import ugh.exceptions.ReadException;
 import ugh.exceptions.WriteException;
-import net.xeoh.plugins.base.annotations.PluginImplementation;
 
 @PluginImplementation
 public class SimImageDownloadPlugin implements IStepPlugin, IPlugin {
@@ -57,7 +51,7 @@ public class SimImageDownloadPlugin implements IStepPlugin, IPlugin {
         return PLUGIN_NAME;
     }
 
-    @Override
+
     public String getDescription() {
         return PLUGIN_NAME;
     }
@@ -93,6 +87,7 @@ public class SimImageDownloadPlugin implements IStepPlugin, IPlugin {
         return PluginGuiType.NONE;
     }
 
+    @Override
     public String getPagePath() {
         return null;
     }
@@ -119,12 +114,22 @@ public class SimImageDownloadPlugin implements IStepPlugin, IPlugin {
 
         } catch (ReadException | PreferencesException | SwapException | DAOException | WriteException | IOException | InterruptedException e) {
             logger.error(e);
-            ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(process.getWikifield(), "error", e.getMessage()), process.getId());
+            LogEntry entry = new LogEntry();
+            entry.setCreationDate(new Date());
+            entry.setType(LogType.ERROR);
+            entry.setProcessId(process.getId());
+            entry.setContent(e.getMessage());
+            ProcessManager.saveLogEntry(entry);
 
             return false;
         }
-        ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(process.getWikifield(), "info", "Download der Bilder abgeschlossen."), process
-                .getId());
+        LogEntry entry = new LogEntry();
+        entry.setCreationDate(new Date());
+        entry.setType(LogType.INFO);
+        entry.setProcessId(process.getId());
+        entry.setContent("Download der Bilder abgeschlossen.");
+        ProcessManager.saveLogEntry(entry);
+
         return true;
     }
 
