@@ -29,7 +29,6 @@ import ugh.dl.Fileformat;
 import ugh.dl.Metadata;
 import ugh.exceptions.PreferencesException;
 import ugh.exceptions.ReadException;
-import ugh.exceptions.WriteException;
 
 @PluginImplementation
 public class SimImageDownloadPlugin implements IStepPlugin, IPlugin {
@@ -112,7 +111,7 @@ public class SimImageDownloadPlugin implements IStepPlugin, IPlugin {
                 }
             }
 
-        } catch (ReadException | PreferencesException | SwapException | DAOException | WriteException | IOException | InterruptedException e) {
+        } catch (ReadException | PreferencesException | SwapException | DAOException  | IOException  e) {
             logger.error(e);
             LogEntry entry = new LogEntry();
             entry.setCreationDate(new Date());
