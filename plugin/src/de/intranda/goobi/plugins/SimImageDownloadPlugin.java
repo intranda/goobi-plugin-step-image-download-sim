@@ -4,12 +4,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.goobi.beans.LogEntry;
 import org.goobi.beans.Process;
 import org.goobi.beans.Step;
 import org.goobi.production.enums.LogType;
@@ -19,10 +17,10 @@ import org.goobi.production.enums.StepReturnValue;
 import org.goobi.production.plugin.interfaces.IPlugin;
 import org.goobi.production.plugin.interfaces.IStepPlugin;
 
+import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.HttpClientHelper;
 import de.sub.goobi.helper.exceptions.DAOException;
 import de.sub.goobi.helper.exceptions.SwapException;
-import de.sub.goobi.persistence.managers.ProcessManager;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
 import ugh.dl.DocStruct;
 import ugh.dl.Fileformat;
@@ -113,22 +111,10 @@ public class SimImageDownloadPlugin implements IStepPlugin, IPlugin {
 
         } catch (ReadException | PreferencesException | SwapException | DAOException  | IOException  e) {
             logger.error(e);
-            LogEntry entry = new LogEntry();
-            entry.setCreationDate(new Date());
-            entry.setType(LogType.ERROR);
-            entry.setProcessId(process.getId());
-            entry.setContent(e.getMessage());
-            ProcessManager.saveLogEntry(entry);
-
+            Helper.addMessageToProcessJournal(process.getId(), LogType.ERROR, e.getMessage(), "automatic");
             return false;
         }
-        LogEntry entry = new LogEntry();
-        entry.setCreationDate(new Date());
-        entry.setType(LogType.INFO);
-        entry.setProcessId(process.getId());
-        entry.setContent("Download der Bilder abgeschlossen.");
-        ProcessManager.saveLogEntry(entry);
-
+        Helper.addMessageToProcessJournal(process.getId(), LogType.INFO, "Download der Bilder abgeschlossen.", "automatic");
         return true;
     }
 
