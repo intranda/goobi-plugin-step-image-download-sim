@@ -18,9 +18,9 @@ import org.goobi.production.plugin.interfaces.IPlugin;
 import org.goobi.production.plugin.interfaces.IStepPlugin;
 
 import de.sub.goobi.helper.Helper;
-import de.sub.goobi.helper.HttpClientHelper;
 import de.sub.goobi.helper.exceptions.DAOException;
 import de.sub.goobi.helper.exceptions.SwapException;
+import io.goobi.workflow.api.connection.HttpUtils;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
 import ugh.dl.DocStruct;
 import ugh.dl.Fileformat;
@@ -47,7 +47,6 @@ public class SimImageDownloadPlugin implements IStepPlugin, IPlugin {
     public String getTitle() {
         return PLUGIN_NAME;
     }
-
 
     public String getDescription() {
         return PLUGIN_NAME;
@@ -109,7 +108,7 @@ public class SimImageDownloadPlugin implements IStepPlugin, IPlugin {
                 }
             }
 
-        } catch (ReadException | PreferencesException | SwapException | DAOException  | IOException  e) {
+        } catch (ReadException | PreferencesException | SwapException | DAOException | IOException e) {
             logger.error(e);
             Helper.addMessageToProcessJournal(process.getId(), LogType.ERROR, e.getMessage(), "automatic");
             return false;
@@ -129,17 +128,9 @@ public class SimImageDownloadPlugin implements IStepPlugin, IPlugin {
         imageFile.getParentFile().mkdirs();
         imageFile.createNewFile();
 
-        OutputStream ostr = null;
-        try {
-            ostr = new FileOutputStream(imageFile);
+        try (OutputStream ostr = new FileOutputStream(imageFile)) {
+            HttpUtils.getStreamFromUrl(ostr, url);
 
-            HttpClientHelper.getStreamFromUrl(ostr, url);
-
-        } finally {
-
-            if (ostr != null) {
-                ostr.close();
-            }
         }
 
     }
